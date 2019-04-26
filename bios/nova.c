@@ -155,8 +155,8 @@ static void set_multiple_atcreg(UBYTE startreg, UBYTE cnt, const UBYTE *values)
     UNUSED(dummy);
 }
 
-/* Check for presence of a VGA card using the ATC palette registers */
-static int check_for_vga(void)
+/* Check for presence of a VGA/ET4000 card using the ATC palette registers */
+static int check_for_et4000(void)
 {
     volatile UBYTE dummy;
     dummy = VGAREG(IS1_RC); /* set ATC_IW to index */
@@ -552,8 +552,9 @@ int init_nova(void)
 
     /* Sanity check that no other VME or Megabus HW has been detected.
      * Note that we can do this only after enabling VGA in the lines above.
+     * A Mach32, if present, has already been detected above.
      */
-    if (!check_for_vga()) {
+    if (!is_mach32 && !check_for_et4000()) {
         KDEBUG(("No Nova or no VGA card found\n"));
         return 0;
     }
