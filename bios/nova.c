@@ -353,15 +353,16 @@ static void set_mach32_idxreg(void)
         set_idxreg(ATI_I, idx, 0x00);
     }
     set_idxreg(ATI_I, 0xB6, 0x01);
-    set_idxreg(ATI_I, 0xB8, 0x00); // TODO: is overwritten below
+    set_idxreg(ATI_I, 0xB8, 0x00);
     set_idxreg(ATI_I, 0xBD, 0x04);
-    set_idxreg(ATI_I, 0xBE, 0x08); // TODO: is overwritten below
+    set_idxreg(ATI_I, 0xBE, 0x08);
     set_idxreg(ATI_I, 0xBF, 0x01);
 
     set_idxreg(TS_I, 0x00, 0x01);   /* Reset Timing Sequencer */
-    set_idxreg(ATI_I, 0xB9, 0x42);
+    set_idxreg(ATI_I, 0xB9, 0x42);  /* Configure clock generator */
     set_idxreg(ATI_I, 0xB8, 0x40);
     set_idxreg(ATI_I, 0xBE, 0x00);
+    VGAREG(MISC_W) = vga_MISC_W;    /* Needed again here. */
     set_idxreg(TS_I, 0x00, 0x03);
 }
 
