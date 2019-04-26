@@ -228,16 +228,23 @@ static int detect_mach32(void)
 
     if (VGAREG_W(CONFIG_STATUS_1) != 0xFFFFU)
     {
-        VGAREG_W(SCRATCH_PAD_1) = 0x5555U;
-        if (VGAREG_W(SCRATCH_PAD_1) == 0x5555U)
+        /* Read two bytes of ATI magic number from BIOS ROM. */
+        /* After power-up, only even bytes are accessible. */
+        if (*(novamembase + 0xC0032UL) == '6' && *(novamembase + 0xC0034UL) == '2')
         {
-            result = 1;
+            /* Try to read and write Mach32 specific scratch register. */
+            VGAREG(SCRATCH_PAD_1) = 0x55U;
+            if (VGAREG(SCRATCH_PAD_1) == 0x55U)
+            {
+                result = 1;
+            }
         }
     }
 
-    if (result)
-    {
+    if (result) {
         KDEBUG(("detect_mach32() detected ATI Mach32\n"));
+    } else {
+        KDEBUG(("detect_mach32() did not detect ATI Mach32\n"));
     }
     return result;
 }
