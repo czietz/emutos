@@ -30,6 +30,7 @@ jobs:
     - name: Build binaries
       run: |
         export VERSION=$(date -u +%Y%m%d-%H%M%S)-$(git rev-parse --short ${GITHUB_SHA})
+        echo VERSION=$VERSION >> $GITHUB_ENV
         echo VERSION=$VERSION
         make clean
         make release VERSION=$VERSION
