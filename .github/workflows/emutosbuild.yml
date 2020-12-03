@@ -32,7 +32,7 @@ jobs:
         export VERSION=$(date -u +%Y%m%d-%H%M%S)-$(git rev-parse --short ${GITHUB_SHA})
         echo VERSION=$VERSION
         make clean
-        make -j2 release VERSION=$VERSION
+        make release VERSION=$VERSION
     - name: Save binaries as build artifacts
       uses: actions/upload-artifact@v1
       with:
