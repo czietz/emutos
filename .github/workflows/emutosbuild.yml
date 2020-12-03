@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: EmuTOS build and test
 
 on:
   push:
@@ -34,6 +34,12 @@ jobs:
         echo VERSION=$VERSION
         make clean
         make release VERSION=$VERSION
+    - name: Display resulting tree
+      run: ls -l release-archives
+    - name: Test the build
+      run: |
+        unzip release-archives/emutos-512k-*.zip
+        make test EMUTOS=$(ls $PWD/emutos-512k-*/etos512k.img)
     - name: Save binaries as build artifacts
       uses: actions/upload-artifact@v1
       with:
