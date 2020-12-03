@@ -11,6 +11,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     - name: Install packages
       run: |
         sudo add-apt-repository ppa:vriviere/ppa && sudo apt-get update
@@ -34,6 +36,12 @@ jobs:
         echo VERSION=$VERSION
         make clean
         make release VERSION=$VERSION
+    - name: Add README.md
+      env:
+        COMPARE_URL: ${{ github.event.compare }}
+        PREVIOUS_COMMIT: ${{ github.event.before }}
+        CURRENT_COMMIT: ${{ github.event.after }}
+      run: .scripts/generate-readme.sh >release-archives/README.md
     - name: Display resulting tree
       run: ls -l release-archives
     - name: Test the build
@@ -41,7 +49,7 @@ jobs:
         unzip release-archives/emutos-512k-*.zip
         make test EMUTOS=$(ls $PWD/emutos-512k-*/etos512k.img)
     - name: Save binaries as build artifacts
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: emutos-${{env.VERSION}}
         path: release-archives/
