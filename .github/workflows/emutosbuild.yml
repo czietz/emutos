@@ -29,7 +29,7 @@ jobs:
         lftp --version
     - name: Build binaries
       run: |
-        export VERSION=$(date -u +%Y%m%d-%H%M%S)-$(git rev-parse --short $TRAVIS_COMMIT)
+        export VERSION=$(date -u +%Y%m%d-%H%M%S)-$(git rev-parse --short ${GITHUB_SHA})
         echo VERSION=$VERSION
         make clean
         make -j2 release VERSION=$VERSION
