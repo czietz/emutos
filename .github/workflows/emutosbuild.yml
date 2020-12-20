@@ -52,6 +52,8 @@ jobs:
       run: |
         unzip release-archives/emutos-512k-*.zip
         make test EMUTOS=$(ls $PWD/emutos-512k-*/etos512k.img)
+    - name: Deploy to SourceForge
+      run: .scripts/deploy.sh
     - name: Save binaries as build artifacts
       uses: actions/upload-artifact@v2
       with:
