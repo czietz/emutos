@@ -22,13 +22,15 @@ REMOTE_DIRNAME=$VERSION
 
 # SourceForge variables
 SF_PROJECT=emutos
-SF_USER=vriviere
+SF_USER=czietz
 SF_DIR=snapshots
 
 # SSH variables for SourceForge
-SSH_USER=$SF_USER,$SF_PROJECT
+#SSH_USER=$SF_USER,$SF_PROJECT
+SSH_USER=$SF_USER
 SSH_HOST=frs.sourceforge.net
-SSH_PATH=/home/pfs/p/$SF_PROJECT/$SF_DIR
+#SSH_PATH=/home/pfs/p/$SF_PROJECT/$SF_DIR
+SSH_PATH=/home/user-web/czietz/htdocs/$SF_DIR
 
 echo "Deploying $LOCAL_DIRNAME to $SSH_HOST:$SSH_PATH/$REMOTE_DIRNAME"
 echo "See result at https://sourceforge.net/projects/$SF_PROJECT/files/$SF_DIR/$REMOTE_DIRNAME/"
@@ -37,6 +39,6 @@ cat << EOF | tee /dev/stderr | lftp
 set sftp:connect-program "ssh -a -x -o StrictHostKeyChecking=no"
 open sftp://$SSH_USER:@$SSH_HOST$SSH_PATH
 mirror -R $LOCAL_DIRNAME $REMOTE_DIRNAME
-ls | .travis/generate-purge.sh >purge.lftp
+ls | .scripts/generate-purge.sh >purge.lftp
 source purge.lftp
 EOF
