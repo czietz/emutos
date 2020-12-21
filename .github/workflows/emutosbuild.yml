@@ -68,3 +68,8 @@ jobs:
       run: |
         cp release-archives/README.md release-archives/commits.txt
         .scripts/deploy.sh
+#    - name: Save binaries as build artifacts
+#      uses: actions/upload-artifact@v2
+#      with:
+#        name: emutos-${{env.VERSION}}
+#        path: release-archives/
