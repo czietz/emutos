@@ -54,7 +54,7 @@ jobs:
         make test EMUTOS=$(ls $PWD/emutos-512k-*/etos512k.img)
     - name: Deploy to SourceForge
       run: |
-        cp release-archives/README.md release-archives/README.txt
+        cp release-archives/README.md release-archives/commits.txt
         .scripts/deploy.sh
     - name: Save binaries as build artifacts
       uses: actions/upload-artifact@v2
