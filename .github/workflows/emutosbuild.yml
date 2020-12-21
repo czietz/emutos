@@ -10,6 +10,13 @@ jobs:
 
     runs-on: ubuntu-18.04
 
+    # Prevent forks from running this job.
+    # Note that this is merely for convenience, to avoid forks from being
+    # bothered by failing GitHub Actions jobs. Forks cannot accidentally
+    # or deliberately deploy to EmuTOS SourceForge page without access
+    # to the SSH key.
+    if: ${{startsWith( github.repository, 'czietz/' ) }}
+
     steps:
     - uses: actions/checkout@v2
       with:
@@ -57,8 +64,3 @@ jobs:
       run: |
         cp release-archives/README.md release-archives/commits.txt
         .scripts/deploy.sh
-    - name: Save binaries as build artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: emutos-${{env.VERSION}}
-        path: release-archives/
