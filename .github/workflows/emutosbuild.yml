@@ -1,8 +1,9 @@
-name: EmuTOS build and test
+name: EmuTOS build, test and deploy
 
 on:
   push:
-    branches: [ master ]
+    branches:
+    - master
 
 jobs:
   build:
