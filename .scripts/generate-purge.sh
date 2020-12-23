@@ -6,7 +6,7 @@
 # Output: lftp "rm -r" commands
 
 # Number of days of retention before purge
-days_retention=7
+days_retention=2
 
 # But always keep a minimal number of snapshots
 min_keep=5
