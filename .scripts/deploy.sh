@@ -34,9 +34,11 @@ SF_USER=czietz
 SF_DIR=snapshots
 
 # SSH variables for SourceForge
-SSH_USER=$SF_USER,$SF_PROJECT
+#SSH_USER=$SF_USER,$SF_PROJECT
+SSH_USER=$SF_USER
 SSH_HOST=frs.sourceforge.net
-SSH_PATH=/home/pfs/p/$SF_PROJECT/$SF_DIR
+#SSH_PATH=/home/pfs/p/$SF_PROJECT/$SF_DIR
+SSH_PATH=/home/user-web/czietz/htdocs/$SF_DIR
 
 echo "Deploying $LOCAL_DIRNAME to $SSH_HOST:$SSH_PATH/$REMOTE_DIRNAME"
 echo "See result at https://sourceforge.net/projects/$SF_PROJECT/files/$SF_DIR/$REMOTE_DIRNAME/"
