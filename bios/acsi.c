@@ -566,7 +566,10 @@ int send_command(WORD dev,ACSICMD *cmd)
  */
 static void dma_send_byte(UBYTE data, UWORD control)
 {
-    ACSIDMA->datacontrol = MAKE_ULONG(data, control);
+    //ACSIDMA->datacontrol = MAKE_ULONG(data, control);
+    ACSIDMA->s.data = data;
+    __asm volatile("nop");
+    ACSIDMA->s.control = control;
 }
 
 
