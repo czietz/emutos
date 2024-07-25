@@ -15,10 +15,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Install SSH keys
-      env:
-        SSH_ID: ${{ secrets.SSH_ID }}
-      run: .scripts/install_ssh_id.sh
+#    - name: Install SSH keys
+#      env:
+#        SSH_ID: ${{ secrets.SSH_ID }}
+#      run: .scripts/install_ssh_id.sh
     - name: Install packages
       run: |
         sudo apt-get update
@@ -51,16 +51,16 @@ jobs:
         cp doc/tools.txt doc/license.txt tools/dist/
         cd tools/dist
         tar -czvf ../tools-${{github.job}}-${{env.VERSION}}.tar.gz *
-    - name: Deploy to SourceForce
-      run: |
-        scp -o StrictHostKeyChecking=no doc/tools.txt $SSH_USER@$SSH_HOST:$SSH_PATH/README.txt
-        cd tools
-        scp -o StrictHostKeyChecking=no *.tar.gz $SSH_USER@$SSH_HOST:$SSH_PATH
-#    - name: Save binaries as build artifacts
-#      uses: actions/upload-artifact@v4
-#      with:
-#        name: tools-${{github.job}}-${{env.VERSION}}
-#        path: tools/*.tar.gz
+#    - name: Deploy to SourceForce
+#      run: |
+#        scp -o StrictHostKeyChecking=no doc/tools.txt $SSH_USER@$SSH_HOST:$SSH_PATH/README.txt
+#        cd tools
+#        scp -o StrictHostKeyChecking=no *.tar.gz $SSH_USER@$SSH_HOST:$SSH_PATH
+    - name: Save binaries as build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: tools-${{github.job}}-${{env.VERSION}}
+        path: tools/*.tar.gz
 
 
   windows:
@@ -69,10 +69,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Install SSH keys
-      env:
-        SSH_ID: ${{ secrets.SSH_ID }}
-      run: .scripts/install_ssh_id.sh
+#    - name: Install SSH keys
+#      env:
+#        SSH_ID: ${{ secrets.SSH_ID }}
+#      run: .scripts/install_ssh_id.sh
     - name: Install packages
       run: |
         sudo apt-get update
@@ -98,15 +98,15 @@ jobs:
         cp doc/tools.txt doc/license.txt tools/dist/
         cd tools/dist
         zip -r ../tools-${{github.job}}-${{env.VERSION}}.zip *
-    - name: Deploy to SourceForce
-      run: |
-        cd tools
-        scp -o StrictHostKeyChecking=no *.zip $SSH_USER@$SSH_HOST:$SSH_PATH
-#    - name: Save binaries as build artifacts
-#      uses: actions/upload-artifact@v4
-#      with:
-#        name: tools-${{github.job}}-${{env.VERSION}}
-#        path: tools/*.zip
+#    - name: Deploy to SourceForce
+#      run: |
+#        cd tools
+#        scp -o StrictHostKeyChecking=no *.zip $SSH_USER@$SSH_HOST:$SSH_PATH
+    - name: Save binaries as build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: tools-${{github.job}}-${{env.VERSION}}
+        path: tools/*.zip
 
 
   macos:
@@ -115,10 +115,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Install SSH keys
-      env:
-        SSH_ID: ${{ secrets.SSH_ID }}
-      run: .scripts/install_ssh_id.sh
+#    - name: Install SSH keys
+#      env:
+#        SSH_ID: ${{ secrets.SSH_ID }}
+#      run: .scripts/install_ssh_id.sh
     - name: Build binaries
       run: |
         export VERSION=$(date -u +%Y%m%d)-$(git rev-parse --short ${GITHUB_SHA})
@@ -138,12 +138,12 @@ jobs:
         cp doc/tools.txt doc/license.txt tools/dist/
         cd tools/dist
         tar -czvf ../tools-${{github.job}}-${{env.VERSION}}.tar.gz *
-    - name: Deploy to SourceForce
-      run: |
-        cd tools
-        scp -o StrictHostKeyChecking=no *.tar.gz $SSH_USER@$SSH_HOST:$SSH_PATH
-#    - name: Save binaries as build artifacts
-#      uses: actions/upload-artifact@v4
-#      with:
-#        name: tools-${{github.job}}-${{env.VERSION}}
-#        path: tools/*.tar.gz
+#    - name: Deploy to SourceForce
+#      run: |
+#        cd tools
+#        scp -o StrictHostKeyChecking=no *.tar.gz $SSH_USER@$SSH_HOST:$SSH_PATH
+    - name: Save binaries as build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: tools-${{github.job}}-${{env.VERSION}}
+        path: tools/*.tar.gz
