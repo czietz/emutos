@@ -2157,7 +2157,7 @@ LONG amiga_flop_mediach(WORD dev)
 #define SERPER_DIVIDEND_NTSC 3579545UL
 #define SERPER_DIVIDEND_PAL  3546895UL
 
-#define SERPER_BAUD(baud) ((SERPER_DIVIDEND_PAL / (baud)) - 1)
+#define SERPER_BAUD(baud) (((amiga_is_ntsc?SERPER_DIVIDEND_NTSC:SERPER_DIVIDEND_PAL) / (baud)) - 1)
 
 #define SERDAT_TBE 0x2000 /* Transmit Buffer Empty */
 
