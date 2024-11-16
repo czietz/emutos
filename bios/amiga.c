@@ -37,6 +37,8 @@
 
 /* Custom registers */
 #define CUSTOM_BASE ((void *)0xdff000)
+#define VPOSR   *(volatile UWORD*)0xdff004
+#define VHPOSR  *(volatile UWORD*)0xdff006
 #define JOY0DAT *(volatile UWORD*)0xdff00a
 #define JOY1DAT *(volatile UWORD*)0xdff00c
 #define ADKCONR *(volatile UWORD*)0xdff010
@@ -262,10 +264,62 @@ static void detect_gayle(void)
     has_gayle = 1;
 }
 
+int amiga_is_ntsc;
+
+/* read current video line, taking into account wrap around */
+static UWORD get_videoline(void)
+{
+    UWORD vpos_high1, vpos_high2, vpos_low;
+
+    do
+    {
+        vpos_high1 = VPOSR & 7;
+        vpos_low   = VHPOSR >> 8;
+        vpos_high2 = VPOSR & 7;
+    } while (vpos_high1 != vpos_high2);
+
+    return (vpos_high1 << 8) | vpos_low;
+}
+
+static void detect_ntsc(void)
+{
+    UWORD cur_line;
+    UWORD max_line = 0;
+    /*
+     * OCS has no chipset ID register, thus the way to distinguish
+     * between PAL and NTSC is counting lines for one frame.
+     */
+
+    while ((cur_line = get_videoline()) < 8) /* wait */; 
+
+    /* observe line count until start of the next frame */
+    while (cur_line >= 8)
+    {
+        if (cur_line > max_line)
+        {
+            max_line = cur_line;
+        }
+
+        cur_line = get_videoline();
+    }
+
+    /* PAL has 625/2 lines per field */
+    if (max_line > 300)
+    {
+        amiga_is_ntsc = 0;
+    }
+    else
+    {
+        amiga_is_ntsc = 1;
+    }
+}
+
 void amiga_machine_detect(void)
 {
     detect_gayle();
     KDEBUG(("has_gayle = %d\n", has_gayle));
+    detect_ntsc();
+    KDEBUG(("amiga_is_ntsc = %d\n", amiga_is_ntsc));
 }
 
 const char *amiga_machine_name(void)
@@ -546,7 +600,7 @@ static void amiga_set_videomode(UWORD width, UWORD height)
         lowres_height = height / 2;
     }
 
-    vstart = 44 + (256 / 2) - (lowres_height / 2);
+    vstart = 44 + ((amiga_is_ntsc?200:256) / 2) - (lowres_height / 2);
     vstop = vstart + lowres_height;
     vstop = (UBYTE)(((WORD)vstop) - 0x100); /* Normalize value */
 
