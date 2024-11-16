@@ -276,7 +276,8 @@ static UWORD get_videoline(void)
         vpos_high1 = VPOSR & 7;
         vpos_low   = VHPOSR >> 8;
         vpos_high2 = VPOSR & 7;
-    } while (vpos_high1 != vpos_high2);
+    }
+    while (vpos_high1 != vpos_high2);
 
     return (vpos_high1 << 8) | vpos_low;
 }
@@ -290,18 +291,17 @@ static void detect_ntsc(void)
      * between PAL and NTSC is counting lines for one frame.
      */
 
-    while ((cur_line = get_videoline()) < 8) /* wait */; 
-
     /* observe line count until start of the next frame */
-    while (cur_line >= 8)
+    do
     {
+        cur_line = get_videoline();
+
         if (cur_line > max_line)
         {
             max_line = cur_line;
         }
-
-        cur_line = get_videoline();
     }
+    while (!(cur_line < max_line));
 
     /* PAL has 625/2 lines per field */
     if (max_line > 300)
