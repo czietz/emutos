@@ -17,16 +17,16 @@ jobs:
     # bothered by failing GitHub Actions jobs. Forks cannot accidentally
     # or deliberately deploy to EmuTOS SourceForge page without access
     # to the SSH key.
-    if: ${{startsWith( github.repository, 'emutos/' ) }}
+    #if: ${{startsWith( github.repository, 'emutos/' ) }}
 
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - name: Install SSH keys
-      env:
-        SSH_ID: ${{ secrets.SSH_ID }}
-      run: .scripts/install_ssh_id.sh
+#    - name: Install SSH keys
+#      env:
+#        SSH_ID: ${{ secrets.SSH_ID }}
+#      run: .scripts/install_ssh_id.sh
     - name: Install packages
       run: |
         sudo add-apt-repository ppa:vriviere/ppa && sudo apt-get update
