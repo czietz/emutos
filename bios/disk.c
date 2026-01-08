@@ -94,25 +94,56 @@ int ultrasatan_id;
 #endif
 
 /*==== Internal declarations ==============================================*/
+#if !CONF_WITH_EXTERNAL_DISK_DRIVER
 static int atari_partition(UWORD unit,LONG *devices_available);
+#endif
 #if DETECT_NATIVE_FEATURES
 static LONG natfeats_inquire(UWORD unit, ULONG *blocksize, ULONG *deviceflags, char *productname, UWORD stringlen);
 #endif
+#if !CONF_WITH_EXTERNAL_DISK_DRIVER
 static LONG internal_inquire(UWORD unit, ULONG *blocksize, ULONG *deviceflags, char *productname, UWORD stringlen);
+#endif
+
+#if CONF_WITH_EXTERNAL_DISK_DRIVER
+/* TOS <-> AHDI API */
+static void dmaboot(UWORD unit, void *bootcode)
+{
+    __asm volatile(
+    "lea     -60(sp),sp\n\t"
+    "movem.l d0-d7/a0-a6,(sp)\n\t"
+    "moveq   #0,d4\n\t"
+    "move.w  %0,d4\n\t"  /* unit number */
+    "move.l  d4,d7\n\t"
+    "lsl.w   #5,d7\n\t"  /* ACSI unit number for old AHDI */
+    "move.l  #0x444D4172,d3\n\t" /* 'DMAr' */
+    "jsr     (%1)\n\t"
+    "movem.l (sp),d0-d7/a0-a6\n\t"
+    "lea     60(sp),sp"
+    : : "r"(unit-NUMFLOPPIES), "a"(bootcode) 
+    : "memory");
+}
+#endif
 
 /*
  * scans one unit and adds all found partitions
  */
 static void disk_init_one(UWORD unit,LONG *devices_available)
 {
-    LONG bitmask, devs, rc;
+    LONG rc;
+    ULONG device_flags;
+    UNIT *punit = &units[unit];
+    char productname[40];
+#if !CONF_WITH_EXTERNAL_DISK_DRIVER
+    WORD shift;
+    LONG bitmask, devs;
+    int i, n;
     ULONG blocksize = SECTOR_SIZE;
     ULONG blocks = 0;
-    ULONG device_flags;
-    WORD shift;
-    UNIT *punit = &units[unit];
-    int i, n;
-    char productname[40];
+#endif
+
+    MAYBE_UNUSED(productname);
+    MAYBE_UNUSED(device_flags);
+
 
     punit->valid = 0;
     punit->features = 0;
@@ -128,6 +159,25 @@ static void disk_init_one(UWORD unit,LONG *devices_available)
     }
     else
 #endif
+
+#if CONF_WITH_EXTERNAL_DISK_DRIVER
+    {
+        static BOOL dma_boot_done = FALSE;
+        if (!dma_boot_done)
+        {
+            /* read root sector */
+            rc = disk_rw(unit, RW_READ, 0, 1, dskbufp);
+            if (rc == E_OK)
+            {
+                /* calculate checksum */
+                if (compute_cksum((UWORD*)dskbufp) == 0x1234)
+                    dmaboot(unit, dskbufp);
+                /* only boot first bootable disk */
+                dma_boot_done = TRUE;
+            }
+        }
+    }
+#else
     {
         /* Try our internal drivers */
         for (i = 0; i <= HD_DETECT_RETRIES; i++)
@@ -179,6 +229,7 @@ static void disk_init_one(UWORD unit,LONG *devices_available)
         for ( ; n < REMOVABLE_PARTITIONS; n++)
             add_partition(unit,devices_available,"BGM",0L,0L);
     }
+#endif /* CONF_WITH_EXTERNAL_DISK_DRIVER */
 
 /* we're doing this here to avoid rescanning the ACSI bus to look for an RTC */
 #if CONF_WITH_ULTRASATAN_CLOCK
@@ -384,6 +435,7 @@ void disk_rescan(UWORD unit)
 
 #define ICD_PARTS
 
+#if !CONF_WITH_EXTERNAL_DISK_DRIVER
 /* check if a partition entry looks valid -- Atari format is assumed if at
    least one of the primary entries is ok this way */
 static int VALID_PARTITION(struct partition_info *pi, unsigned long hdsiz)
@@ -472,7 +524,6 @@ static ULONG check_for_no_partitions(UBYTE *sect)
     return size;
 }
 
-
 #define MAXPHYSSECTSIZE 512
 typedef union
 {
@@ -483,7 +534,7 @@ typedef union
     GPT_ENTRY gpt_entries[4];
 } PHYSSECT;
 
-PHYSSECT physsect, physsect2;
+static PHYSSECT physsect, physsect2;
 
 #if CONF_WITH_IDE
 
@@ -917,7 +968,7 @@ static int atari_partition(UWORD unit,LONG *devices_available)
 
     return 1;
 }
-
+#endif /* !CONF_WITH_EXTERNAL_DISK_DRIVER */
 
 /*=========================================================================*/
 
@@ -936,6 +987,7 @@ static LONG natfeats_inquire(UWORD unit, ULONG *blocksize, ULONG *deviceflags, c
 
 #endif /* DETECT_NATIVE_FEATURES */
 
+#if !CONF_WITH_EXTERNAL_DISK_DRIVER
 /* Get unit information, using our internal drivers only. */
 static LONG internal_inquire(UWORD unit, ULONG *blocksize, ULONG *deviceflags, char *productname, UWORD stringlen)
 {
@@ -996,6 +1048,7 @@ static LONG internal_inquire(UWORD unit, ULONG *blocksize, ULONG *deviceflags, c
 
     return 0;
 }
+#endif
 
 #if CONF_WITH_XHDI
 
@@ -1025,6 +1078,7 @@ LONG disk_inquire(UWORD unit, ULONG *blocksize, ULONG *deviceflags, char *produc
 }
 #endif /* CONF_WITH_XHDI */
 
+#if !CONF_WITH_EXTERNAL_DISK_DRIVER
 /* Get unit capacity */
 LONG disk_get_capacity(UWORD unit, ULONG *blocks, ULONG *blocksize)
 {
@@ -1089,6 +1143,7 @@ LONG disk_get_capacity(UWORD unit, ULONG *blocks, ULONG *blocksize)
 
     return 0;
 }
+#endif
 
 /* Unit read/write */
 LONG disk_rw(UWORD unit, UWORD rw, ULONG sector, UWORD count, UBYTE *buf)
