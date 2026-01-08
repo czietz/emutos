@@ -49,6 +49,7 @@
 #include "vectors.h"
 #include "asm.h"
 #include "chardev.h"
+#include "disk.h"
 #include "blkdev.h"
 #include "parport.h"
 #include "serport.h"
@@ -499,11 +500,9 @@ static void bios_init(void)
         }
     }
 
-#if !CONF_WITH_EXTERNAL_DISK_DRIVER
     KDEBUG(("blkdev_init()\n"));
     blkdev_init();      /* floppy and harddisk initialisation */
     KDEBUG(("after blkdev_init()\n"));
-#endif
 
     /* initialize BIOS components */
 
@@ -549,15 +548,11 @@ static void bios_init(void)
     KDEBUG(("after osinit_after_xmaddalt()\n"));
     boot_status |= DOS_AVAILABLE;   /* track progress */
 
-#if CONF_WITH_EXTERNAL_DISK_DRIVER
-    KDEBUG(("blkdev_init()\n"));
-    blkdev_init();      /* floppy and harddisk initialisation */
-    KDEBUG(("after blkdev_init()\n"));
-#endif
-
     /* Enable VBL processing */
     swv_vec = os_header.reseth; /* reset system on monitor change & jump to _main */
     vblsem = 1;
+
+    disk_try_dmaboot();
 
 #if CONF_WITH_CARTRIDGE
     {

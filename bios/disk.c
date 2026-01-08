@@ -100,11 +100,25 @@ static int atari_partition(UWORD unit,LONG *devices_available);
 #if DETECT_NATIVE_FEATURES
 static LONG natfeats_inquire(UWORD unit, ULONG *blocksize, ULONG *deviceflags, char *productname, UWORD stringlen);
 #endif
-#if !CONF_WITH_EXTERNAL_DISK_DRIVER
 static LONG internal_inquire(UWORD unit, ULONG *blocksize, ULONG *deviceflags, char *productname, UWORD stringlen);
-#endif
 
-#if CONF_WITH_EXTERNAL_DISK_DRIVER
+/* scan disk majors in the following order */
+static const int majors[] =
+{
+#if CONF_WITH_IDE
+    16, 18, 17, 19, 20, 22, 21, 23,     /* IDE primary/secondary */
+#endif
+#if CONF_WITH_SCSI || CONF_WITH_ARANYM
+    8, 9, 10, 11, 12, 13, 14, 15,       /* SCSI */
+#endif
+#if CONF_WITH_ACSI
+    0, 1, 2, 3, 4, 5, 6, 7,             /* ACSI */
+#endif
+#if CONF_WITH_SDMMC
+    24, 25, 26, 27, 28, 29, 30, 31      /* SD/MMC */
+#endif
+};
+
 /* TOS <-> AHDI API */
 static void dmaboot(UWORD unit, void *bootcode)
 {
@@ -122,28 +136,48 @@ static void dmaboot(UWORD unit, void *bootcode)
     : : "r"(unit-NUMFLOPPIES), "a"(bootcode) 
     : "memory");
 }
-#endif
+
+void disk_try_dmaboot(void)
+{
+    int i;
+    LONG rc;
+
+    for(i = 0; i < ARRAY_SIZE(majors); i++) {
+        UWORD unit = NUMFLOPPIES + majors[i];
+        if (units[unit].valid && (units[unit].drivemap == 0)) {
+            /* read root sector */
+            rc = disk_rw(unit, RW_READ, 0, 1, dskbufp);
+            if (rc == E_OK)
+            {
+                /* calculate checksum */
+                if (compute_cksum((UWORD*)dskbufp) == 0x1234)
+                {
+                    dmaboot(unit, dskbufp);
+                    /* only boot first bootable disk */
+                    break;
+                }
+            }
+        }
+    }
+}
 
 /*
  * scans one unit and adds all found partitions
  */
 static void disk_init_one(UWORD unit,LONG *devices_available)
 {
-    LONG rc;
-    ULONG device_flags;
     UNIT *punit = &units[unit];
-    char productname[40];
-#if !CONF_WITH_EXTERNAL_DISK_DRIVER
+    LONG rc;
     WORD shift;
-    LONG bitmask, devs;
-    int i, n;
+    int i;
     ULONG blocksize = SECTOR_SIZE;
     ULONG blocks = 0;
+    char productname[40];
+    ULONG device_flags;
+#if !CONF_WITH_EXTERNAL_DISK_DRIVER
+    int n;
+    LONG bitmask, devs;
 #endif
-
-    MAYBE_UNUSED(productname);
-    MAYBE_UNUSED(device_flags);
-
 
     punit->valid = 0;
     punit->features = 0;
@@ -159,25 +193,6 @@ static void disk_init_one(UWORD unit,LONG *devices_available)
     }
     else
 #endif
-
-#if CONF_WITH_EXTERNAL_DISK_DRIVER
-    {
-        static BOOL dma_boot_done = FALSE;
-        if (!dma_boot_done)
-        {
-            /* read root sector */
-            rc = disk_rw(unit, RW_READ, 0, 1, dskbufp);
-            if (rc == E_OK)
-            {
-                /* calculate checksum */
-                if (compute_cksum((UWORD*)dskbufp) == 0x1234)
-                    dmaboot(unit, dskbufp);
-                /* only boot first bootable disk */
-                dma_boot_done = TRUE;
-            }
-        }
-    }
-#else
     {
         /* Try our internal drivers */
         for (i = 0; i <= HD_DETECT_RETRIES; i++)
@@ -213,6 +228,8 @@ static void disk_init_one(UWORD unit,LONG *devices_available)
     if (device_flags & XH_TARGET_REMOVABLE)
         punit->features |= UNIT_REMOVABLE;
 
+#if !CONF_WITH_EXTERNAL_DISK_DRIVER
+
     /* scan for ATARI partitions on this harddrive */
     devs = *devices_available;  /* remember initial set */
     atari_partition(unit,devices_available);
@@ -229,7 +246,6 @@ static void disk_init_one(UWORD unit,LONG *devices_available)
         for ( ; n < REMOVABLE_PARTITIONS; n++)
             add_partition(unit,devices_available,"BGM",0L,0L);
     }
-#endif /* CONF_WITH_EXTERNAL_DISK_DRIVER */
 
 /* we're doing this here to avoid rescanning the ACSI bus to look for an RTC */
 #if CONF_WITH_ULTRASATAN_CLOCK
@@ -246,6 +262,8 @@ static void disk_init_one(UWORD unit,LONG *devices_available)
     }
 #endif /* CONF_WITH_ULTRASATAN_CLOCK */
 
+#endif /* ! CONF_WITH_EXTERNAL_DISK_DRIVER */
+
 }
 
 /*
@@ -261,22 +279,6 @@ LONG    drvrem;
  */
 void disk_init_all(void)
 {
-    /* scan disk majors in the following order */
-    static const int majors[] =
-    {
-#if CONF_WITH_IDE
-        16, 18, 17, 19, 20, 22, 21, 23,     /* IDE primary/secondary */
-#endif
-#if CONF_WITH_SCSI || CONF_WITH_ARANYM
-        8, 9, 10, 11, 12, 13, 14, 15,       /* SCSI */
-#endif
-#if CONF_WITH_ACSI
-        0, 1, 2, 3, 4, 5, 6, 7,             /* ACSI */
-#endif
-#if CONF_WITH_SDMMC
-        24, 25, 26, 27, 28, 29, 30, 31      /* SD/MMC */
-#endif
-    };
     int i;
     LONG devices_available = 0L;
     LONG bitmask;
@@ -987,7 +989,6 @@ static LONG natfeats_inquire(UWORD unit, ULONG *blocksize, ULONG *deviceflags, c
 
 #endif /* DETECT_NATIVE_FEATURES */
 
-#if !CONF_WITH_EXTERNAL_DISK_DRIVER
 /* Get unit information, using our internal drivers only. */
 static LONG internal_inquire(UWORD unit, ULONG *blocksize, ULONG *deviceflags, char *productname, UWORD stringlen)
 {
@@ -1048,7 +1049,6 @@ static LONG internal_inquire(UWORD unit, ULONG *blocksize, ULONG *deviceflags, c
 
     return 0;
 }
-#endif
 
 #if CONF_WITH_XHDI
 
@@ -1078,7 +1078,6 @@ LONG disk_inquire(UWORD unit, ULONG *blocksize, ULONG *deviceflags, char *produc
 }
 #endif /* CONF_WITH_XHDI */
 
-#if !CONF_WITH_EXTERNAL_DISK_DRIVER
 /* Get unit capacity */
 LONG disk_get_capacity(UWORD unit, ULONG *blocks, ULONG *blocksize)
 {
@@ -1143,7 +1142,6 @@ LONG disk_get_capacity(UWORD unit, ULONG *blocks, ULONG *blocksize)
 
     return 0;
 }
-#endif
 
 /* Unit read/write */
 LONG disk_rw(UWORD unit, UWORD rw, ULONG sector, UWORD count, UBYTE *buf)

@@ -1673,7 +1673,7 @@
  * instead, like Atari TOS
  */
 #ifndef CONF_WITH_EXTERNAL_DISK_DRIVER
-# define CONF_WITH_EXTERNAL_DISK_DRIVER 1
+# define CONF_WITH_EXTERNAL_DISK_DRIVER 0
 #endif
 
 /*
