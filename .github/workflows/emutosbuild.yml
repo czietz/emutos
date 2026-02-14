@@ -4,8 +4,7 @@ on:
   push:
     branches:
     - master
-    tags:
-    - VERSION_*
+    - nova_falcon
 
 jobs:
   build:
@@ -17,16 +16,16 @@ jobs:
     # bothered by failing GitHub Actions jobs. Forks cannot accidentally
     # or deliberately deploy to EmuTOS SourceForge page without access
     # to the SSH key.
-    if: ${{startsWith( github.repository, 'emutos/' ) }}
+    # if: ${{startsWith( github.repository, 'emutos/' ) }}
 
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - name: Install SSH keys
-      env:
-        SSH_ID: ${{ secrets.SSH_ID }}
-      run: .scripts/install_ssh_id.sh
+#    - name: Install SSH keys
+#      env:
+#        SSH_ID: ${{ secrets.SSH_ID }}
+#      run: .scripts/install_ssh_id.sh
     - name: Install packages
       run: |
         sudo add-apt-repository ppa:vriviere/ppa && sudo apt-get update
@@ -77,13 +76,13 @@ jobs:
       run: |
         unzip release-archives/emutos-512k-*.zip
         make test EMUTOS=$(ls $PWD/emutos-512k-*/etos512us.img)
-    - name: Deploy to SourceForge
-      if: ${{ ! startsWith(github.ref, 'refs/tags/VERSION') }}
-      run: .scripts/deploy.sh
+#    - name: Deploy to SourceForge
+#      if: ${{ ! startsWith(github.ref, 'refs/tags/VERSION') }}
+#      run: .scripts/deploy.sh
     - name: Temporarily store release as build artifact
-      if: ${{ startsWith(github.ref, 'refs/tags/VERSION') }}
+#      if: ${{ startsWith(github.ref, 'refs/tags/VERSION') }}
       uses: actions/upload-artifact@v4
       with:
         name: emutos-${{env.VERSION}}
         path: release-archives/
-        retention-days: 1
+        retention-days: 7
