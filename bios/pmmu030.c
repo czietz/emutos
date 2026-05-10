@@ -135,8 +135,8 @@ static const struct pmmutable mmutable_rom =
       PMMU_SF_PAGE(0x00700000),
       PMMU_SF_PAGE(0x00800000),
       PMMU_SF_PAGE(0x00900000),
-      PMMU_SF_PAGE(0x00a00000),
-      PMMU_SF_PAGE(0x00b00000),
+      PMMU_SF_PAGE_CI(0x00a00000), /* nova memory */
+      PMMU_SF_PAGE_CI(0x00b00000), /* nova IO */
       PMMU_SF_PAGE(0x00c00000),
       PMMU_SF_PAGE(0x00d00000),
       PMMU_SF_PAGE(0x00e00000),
