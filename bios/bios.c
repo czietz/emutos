@@ -528,6 +528,17 @@ static void bios_init(void)
         }
 
         if (init_nova()) {
+
+#if CONF_WITH_BLITTER
+            /* On the Falcon, the Blitter cannot access Nova video memory.
+             * Therefore, disable the Blitter entirely, to prevent it from
+             * being used.
+             */
+            if (HAS_VIDEL) {
+                has_blitter = 0;
+            }
+#endif
+
             set_rez_hacked();   /* also reinitializes the vt52 console */
         }
 
@@ -536,7 +547,7 @@ static void bios_init(void)
             set_cache(cache_state);
         }
     }
-#endif
+#endif /* CONF_WITH_NOVA */
 
 #if CONF_WITH_NLS
     KDEBUG(("nls_init()\n"));
