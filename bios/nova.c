@@ -241,7 +241,7 @@ void detect_nova(void)
         has_nova = 1;
         is_crazydots = TRUE;
     }
-    else if (HAS_VIDEL && ((ULONG)phystop < 0x00B00000UL) &&
+    else if (HAS_VIDEL && ((ULONG)phystop < 0x00A00000UL) &&
              check_read_byte(0xFFB00000UL+VIDSUB))
     {
         /* Nova in Atari Falcon */
